@@ -11,6 +11,7 @@ class EditProductScreen extends StatefulWidget {
 }
 
 class _EditProductScreenState extends State<EditProductScreen> {
+  var _heading = 'Add Product';
   final _priceFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
   final _imageUrlFocusNode = FocusNode();
@@ -39,14 +40,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (_isInt) {
       final productId = ModalRoute.of(context).settings.arguments as String;
       if (productId != null) {
+        _heading = 'Edit Product';
         _editProduct =
             Provider.of<Products>(context, listen: false).findById(productId);
-        _inItValues = {
-          'title': _editProduct.title,
-          'description': _editProduct.description,
-          'price': _editProduct.price.toString()
-        };
-
+         _setInitialValues(_editProduct);
         _imageUrlController.text = _editProduct.imageUrl;
       }
     }
@@ -60,38 +57,41 @@ class _EditProductScreenState extends State<EditProductScreen> {
     }
   }
 
-  void _saveForm() {
+  Future<void> _saveForm() async {
     final isValid = _form.currentState.validate();
     if (!isValid) {
       return;
     }
     _form.currentState.save();
     _resetLoader(true);
-    if (_editProduct.id == null) {
-      Provider.of<Products>(context, listen: false)
-          .addProduct(_editProduct)
-          .then((_) {
+    try {
+      if (_editProduct.id == null) {
+        // To persist inserted value, set intial values
+        _setInitialValues(_editProduct);
+        await Provider.of<Products>(context, listen: false)
+            .addProduct(_editProduct);
+        Navigator.of(context).pop();
+      } else {
+        await Provider.of<Products>(context, listen: false)
+            .updateProduct(_editProduct.id, _editProduct);
         _resetLoader(false);
         Navigator.of(context).pop();
-      }).catchError((error) {
-        _resetLoader(false);
-        showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-                  title: Text('An error occured'),
-                  content: Text('Something went wrong.'),
-                  actions: <Widget>[
-                    FlatButton(
-                      child: Text('Okay'),
-                      onPressed: () => Navigator.of(ctx).pop(),
-                    )
-                  ],
-                ));
-      });
-    } else {
-      Provider.of<Products>(context, listen: false).updateProduct(_editProduct);
+      }
+    } catch (error) {
+      await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+                title: Text('An error occured'),
+                content: Text('Something went wrong.'),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('Okay'),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                  )
+                ],
+              ));
+    } finally {
       _resetLoader(false);
-      Navigator.of(context).pop();
     }
   }
 
@@ -99,6 +99,14 @@ class _EditProductScreenState extends State<EditProductScreen> {
     setState(() {
       _isLoading = value;
     });
+  }
+
+  void _setInitialValues(Product product) {
+    _inItValues = {
+          'title': product.title,
+          'description': product.description,
+          'price': product.price.toString()
+        };
   }
 
   @override
@@ -115,7 +123,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Product'),
+        title: Text(_heading),
         actions: <Widget>[
           IconButton(icon: Icon(Icons.save), onPressed: _saveForm)
         ],
