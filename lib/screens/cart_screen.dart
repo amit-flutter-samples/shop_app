@@ -42,15 +42,7 @@ class CartScreen extends StatelessWidget {
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  FlatButton(
-                    child: Text('Order Now'),
-                    onPressed: () {
-                      Provider.of<Orders>(context, listen: false).addOrder(cartItemsValue, cart.totalAmount);
-                      cart.clear();
-                      Navigator.of(context).pushNamed(OrdersScreen.routeName);
-                    },
-                    textColor: Theme.of(context).primaryColor,
-                  )
+                  OrderButton(cart: cart, cartItemsValue: cartItemsValue)
                 ],
               ),
             ),
@@ -69,6 +61,52 @@ class CartScreen extends StatelessWidget {
           )
         ],
       ),
+    );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  const OrderButton({
+    Key key,
+    @required this.cart,
+    @required this.cartItemsValue,
+  }) : super(key: key);
+
+  final Cart cart;
+  final List<CartItem> cartItemsValue;
+
+  @override
+  _OrderButtonState createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      child: _isLoading ? CircularProgressIndicator() : Text('Order Now'),
+      onPressed: (widget.cart.totalAmount <= 0 || _isLoading)
+          ? null
+          : () async {
+              setState(() {
+                _isLoading = true;
+              });
+              await Provider.of<Orders>(context, listen: false)
+                  .addOrder(
+                widget.cartItemsValue,
+                widget.cart.totalAmount,
+              );
+
+              setState(() {
+                _isLoading = false;
+              });
+
+              widget.cart.clear();
+              Navigator.of(context)
+                  .pushNamed(OrdersScreen.routeName);
+            },
+      textColor: Theme.of(context).primaryColor,
     );
   }
 }

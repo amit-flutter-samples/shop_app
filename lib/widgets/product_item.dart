@@ -5,11 +5,25 @@ import 'package:shop_app/providers/product.dart';
 import '../screens/product_detail_screen.dart';
 
 class ProductItem extends StatelessWidget {
+
+  Future<void> toggleFavorite(BuildContext context, ScaffoldState scaffold, Product product) async {
+    try {
+      await Provider.of<Product>(context, listen: false).toggleFavoriteStatus();
+      scaffold.showSnackBar(SnackBar(
+        content: Text('Marked as fav successfully.', textAlign: TextAlign.center,),
+      ));
+    } catch (error) {
+      scaffold.showSnackBar(SnackBar(
+        content: Text('Operation failed.', textAlign: TextAlign.center,),
+      ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // final product = Provider.of<Product>(context);
     final cart = Provider.of<Cart>(context, listen: false);
-
+    final scaffold = Scaffold.of(context);
     return Consumer<Product>(
       builder: (ctx, product, child) => ClipRRect(
         borderRadius: BorderRadius.circular(10),
@@ -30,9 +44,7 @@ class ProductItem extends StatelessWidget {
               icon: Icon(
                   product.isFavorite ? Icons.favorite : Icons.favorite_border),
               color: Theme.of(context).accentColor,
-              onPressed: () {
-                product.toggleFavoriteStatus();
-              },
+              onPressed: () async => toggleFavorite(context, scaffold, product),
             ),
             title: Text(
               product.title,

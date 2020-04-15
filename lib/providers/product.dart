@@ -1,4 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../models/http_exception.dart';
 
 class Product with ChangeNotifier {
   final String id;
@@ -7,6 +11,8 @@ class Product with ChangeNotifier {
   final double price;
   final String imageUrl;
   bool isFavorite;
+
+  static const ROOT_URL = 'https://flutter-shop-app-dbc34.firebaseio.com/';
 
   Product({
     @required this.id,
@@ -18,8 +24,18 @@ class Product with ChangeNotifier {
     }
   );
 
-  void toggleFavoriteStatus() {
-    this.isFavorite = !this.isFavorite;
-    notifyListeners();
+  Future<void> toggleFavoriteStatus() async {
+      var currentStatus = this.isFavorite;
+      this.isFavorite = !this.isFavorite;
+      notifyListeners();
+      final productUrl = ROOT_URL + 'products/${this.id}.json';
+      final response = await http.patch(productUrl, body: json.encode({
+        'isFavorite': this.isFavorite
+      }));
+      if(response.statusCode >= 400) {
+        this.isFavorite = currentStatus;
+        notifyListeners();
+        throw HttpException('Update failed.');
+      }
   }
 }
