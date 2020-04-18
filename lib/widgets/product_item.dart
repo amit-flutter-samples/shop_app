@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart.dart';
+import '../providers/auth.dart';
 import 'package:shop_app/providers/product.dart';
 import '../screens/product_detail_screen.dart';
 
 class ProductItem extends StatelessWidget {
 
-  Future<void> toggleFavorite(BuildContext context, ScaffoldState scaffold, Product product) async {
+  Future<void> toggleFavorite(BuildContext context, ScaffoldState scaffold, Product product, Auth auth) async {
     try {
-      await Provider.of<Product>(context, listen: false).toggleFavoriteStatus();
+      await Provider.of<Product>(context, listen: false).toggleFavoriteStatus(auth.token, auth.userId);
       scaffold.showSnackBar(SnackBar(
         content: Text('Marked as fav successfully.', textAlign: TextAlign.center,),
       ));
@@ -24,6 +25,7 @@ class ProductItem extends StatelessWidget {
     // final product = Provider.of<Product>(context);
     final cart = Provider.of<Cart>(context, listen: false);
     final scaffold = Scaffold.of(context);
+    final authData = Provider.of<Auth>(context, listen: false);
     return Consumer<Product>(
       builder: (ctx, product, child) => ClipRRect(
         borderRadius: BorderRadius.circular(10),
@@ -44,7 +46,7 @@ class ProductItem extends StatelessWidget {
               icon: Icon(
                   product.isFavorite ? Icons.favorite : Icons.favorite_border),
               color: Theme.of(context).accentColor,
-              onPressed: () async => toggleFavorite(context, scaffold, product),
+              onPressed: () async => toggleFavorite(context, scaffold, product, authData),
             ),
             title: Text(
               product.title,

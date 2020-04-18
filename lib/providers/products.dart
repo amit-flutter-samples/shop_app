@@ -8,6 +8,10 @@ import './product.dart';
 
 class Products with ChangeNotifier {
   static const ROOT_URL = 'https://flutter-shop-app-dbc34.firebaseio.com/';
+  final String auth;
+  final String userId;
+
+  Products(this.auth, this.userId, this._items);
 
   List<Product> _items = [
     // Product(
@@ -52,8 +56,16 @@ class Products with ChangeNotifier {
     return _items.where((item) => item.isFavorite).toList();
   }
 
-  Future<void> getProducts() async {
-    final productUrl = ROOT_URL + 'products.json';
+  Future<dynamic> _getFavProducts() async {
+    final favUrl = ROOT_URL + 'userFavorites/$userId.json?auth=$auth';
+    final response = await http.get(favUrl);
+    final favData = json.decode(response.body);
+    return favData;
+  }
+
+  Future<void> getProducts([bool filterByUser = false]) async {
+    final filterParam = filterByUser ? '&orderBy="createdBy"&equalTo="$userId"' : '';
+    final productUrl = ROOT_URL + 'products.json?auth=$auth$filterParam';
     try {
       var response = await http.get(productUrl);
       final data = json.decode(response.body) as Map<String, dynamic>;
@@ -63,6 +75,8 @@ class Products with ChangeNotifier {
         return;
       }
 
+      var favData = await _getFavProducts();
+
       data.forEach((prodId, prodData) {
         _items.add(Product(
           id: prodId,
@@ -70,7 +84,7 @@ class Products with ChangeNotifier {
           description: prodData['description'],
           price: prodData['price'],
           imageUrl: prodData['imageUrl'],
-          isFavorite: prodData['isFavorite'],
+          isFavorite: favData == null ? false : favData[prodId] ?? false,
         ));
       });
       notifyListeners();
@@ -78,7 +92,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
-    final productUrl = ROOT_URL + 'products.json';
+    final productUrl = ROOT_URL + 'products.json?auth=$auth';
     try {
       final response = await http.post(
         productUrl,
@@ -87,7 +101,7 @@ class Products with ChangeNotifier {
           'description': product.description,
           'imageUrl': product.imageUrl,
           'price': product.price,
-          'isFavorite': product.isFavorite
+          'createdBy': userId,
         }),
       );
 
@@ -106,7 +120,7 @@ class Products with ChangeNotifier {
   Future<void> updateProduct(String id, Product product) async {
     final productIndex = _items.indexWhere((prod) => prod.id == product.id);
     if (productIndex >= 0) {
-      final productUrl = ROOT_URL + 'products/$id.json';
+      final productUrl = ROOT_URL + 'products/$id.json?auth=$auth';
       try {
         var response = await http.patch(productUrl,
             body: json.encode({
@@ -127,7 +141,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> deleteProduct(String productId) async {
-    final productUrl = ROOT_URL + 'products/$productId.json';
+    final productUrl = ROOT_URL + 'products/$productId.json?auth=$auth';
     final existingProductIndex =
         _items.indexWhere((item) => item.id == productId);
     var existingProduct = _items[existingProductIndex];
