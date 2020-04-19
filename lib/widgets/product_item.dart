@@ -6,16 +6,23 @@ import 'package:shop_app/providers/product.dart';
 import '../screens/product_detail_screen.dart';
 
 class ProductItem extends StatelessWidget {
-
-  Future<void> toggleFavorite(BuildContext context, ScaffoldState scaffold, Product product, Auth auth) async {
+  Future<void> toggleFavorite(BuildContext context, ScaffoldState scaffold,
+      Product product, Auth auth) async {
     try {
-      await Provider.of<Product>(context, listen: false).toggleFavoriteStatus(auth.token, auth.userId);
+      await Provider.of<Product>(context, listen: false)
+          .toggleFavoriteStatus(auth.token, auth.userId);
       scaffold.showSnackBar(SnackBar(
-        content: Text('Marked as fav successfully.', textAlign: TextAlign.center,),
+        content: Text(
+          'Marked as fav successfully.',
+          textAlign: TextAlign.center,
+        ),
       ));
     } catch (error) {
       scaffold.showSnackBar(SnackBar(
-        content: Text('Operation failed.', textAlign: TextAlign.center,),
+        content: Text(
+          'Operation failed.',
+          textAlign: TextAlign.center,
+        ),
       ));
     }
   }
@@ -35,9 +42,14 @@ class ProductItem extends StatelessWidget {
               Navigator.of(context).pushNamed(ProductDetailScreen.routeName,
                   arguments: product.id);
             },
-            child: Image.network(
-              product.imageUrl,
-              fit: BoxFit.cover,
+            child: Hero(
+              tag: product.id,
+              child: FadeInImage(
+                placeholder:
+                    AssetImage('assets/images/product-placeholder.png'),
+                image: NetworkImage(product.imageUrl),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           footer: GridTileBar(
@@ -46,7 +58,8 @@ class ProductItem extends StatelessWidget {
               icon: Icon(
                   product.isFavorite ? Icons.favorite : Icons.favorite_border),
               color: Theme.of(context).accentColor,
-              onPressed: () async => toggleFavorite(context, scaffold, product, authData),
+              onPressed: () async =>
+                  toggleFavorite(context, scaffold, product, authData),
             ),
             title: Text(
               product.title,
@@ -61,11 +74,17 @@ class ProductItem extends StatelessWidget {
                 cart.addItem(product.id, product.price, product.title);
                 Scaffold.of(context).hideCurrentSnackBar();
                 Scaffold.of(context).showSnackBar(SnackBar(
-                  content: Text('Added item to cart', textAlign: TextAlign.center,),
+                  content: Text(
+                    'Added item to cart',
+                    textAlign: TextAlign.center,
+                  ),
                   duration: Duration(seconds: 5),
-                  action: SnackBarAction(label: 'UNDO', onPressed: () {
-                    cart.removeSingleItem(product.id);
-                  },),
+                  action: SnackBarAction(
+                    label: 'UNDO',
+                    onPressed: () {
+                      cart.removeSingleItem(product.id);
+                    },
+                  ),
                 ));
               },
             ),

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../models/http_exception.dart';
 
 import 'package:flutter/foundation.dart';
 import './cart.dart';

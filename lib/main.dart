@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import './helpers/custom_route.dart';
 import './providers/auth.dart';
 import './screens/auth_screen.dart';
 import './screens/edit_product_screen.dart';
@@ -25,13 +26,13 @@ class MyApp extends StatelessWidget {
         providers: [
           ChangeNotifierProvider.value(value: Auth()),
           ChangeNotifierProxyProvider<Auth, Products>(
-              builder: (ctx, auth, previousProducts) => Products(
+              update: (ctx, auth, previousProducts) => Products(
                   auth.token,
                   auth.userId,
                   previousProducts == null ? [] : previousProducts.items)),
           ChangeNotifierProvider.value(value: Cart()),
           ChangeNotifierProxyProvider<Auth, Orders>(
-              builder: (ctx, auth, previousOrders) => Orders(
+              update: (ctx, auth, previousOrders) => Orders(
                   auth.token,
                   auth.userId,
                   previousOrders == null ? [] : previousOrders.orders))
@@ -42,7 +43,11 @@ class MyApp extends StatelessWidget {
             theme: ThemeData(
                 primarySwatch: Colors.purple,
                 accentColor: Colors.deepOrange,
-                fontFamily: 'Lato'),
+                fontFamily: 'Lato',
+                pageTransitionsTheme: PageTransitionsTheme(builders: {
+                  TargetPlatform.android: CustomPageTransition(),
+                  TargetPlatform.iOS: CustomPageTransition()
+                })),
             home: auth.isAuth
                 ? ProductsOverviewScreen()
                 : FutureBuilder(

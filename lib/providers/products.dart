@@ -64,6 +64,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> getProducts([bool filterByUser = false]) async {
+    
     final filterParam = filterByUser ? '&orderBy="createdBy"&equalTo="$userId"' : '';
     final productUrl = ROOT_URL + 'products.json?auth=$auth$filterParam';
     try {
